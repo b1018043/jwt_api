@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"flag"
 	"log"
 	"net/http"
 
@@ -26,11 +27,14 @@ func envLoad() {
 
 func main() {
 	envLoad()
+	var addr = flag.String("addr", ":8080", "address")
+	flag.Parse()
 	r := mux.NewRouter()
 	r.Handle("/todo", todos)
 	r.Handle("/private", auth.JwtMiddleware.Handler(privateTodo))
 	r.Handle("/auth", auth.GetTokenHandker)
-	if err := http.ListenAndServe(":8080", r); err != nil {
+	log.Println("port :", *addr)
+	if err := http.ListenAndServe(*addr, r); err != nil {
 		log.Fatal("ListenAndServe:", err)
 	}
 }
