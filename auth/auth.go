@@ -19,17 +19,23 @@ type tokenRequest struct {
 	PassWord string `json:"password"`
 }
 
-// GetTokenHandker get token
-var GetTokenHandker = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+// DispatchToken return tokenstring
+func DispatchToken(sub, name, secret string, t time.Time) (string, error) {
 	token := jwt.New(jwt.SigningMethodHS256)
 	claims := token.Claims.(jwt.MapClaims)
+	claims["admin"] = true
+	claims["sub"] = sub
+	claims["name"] = name
+	claims["iat"] = t
+	claims["exp"] = t.Add(time.Hour * 24).Unix()
+	tokenString, err := token.SignedString([]byte(secret))
+	return tokenString, err
+}
+
+// GetTokenHandker get token
+var GetTokenHandker = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodGet {
-		claims["admin"] = true
-		claims["sub"] = "123456789"
-		claims["name"] = "fuga"
-		claims["iat"] = time.Now()
-		claims["exp"] = time.Now().Add(time.Hour * 24).Unix()
-		tokenString, err := token.SignedString([]byte(os.Getenv("SECRET_KEY")))
+		tokenString, err := DispatchToken("123456789", "fuga", os.Getenv("SECRET_KEY"), time.Now())
 		if err != nil {
 			w.Write([]byte("err"))
 		}
@@ -50,12 +56,7 @@ var GetTokenHandker = http.HandlerFunc(func(w http.ResponseWriter, r *http.Reque
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-	claims["admin"] = true
-	claims["sub"] = user.PassWord
-	claims["name"] = user.UserName
-	claims["iat"] = time.Now()
-	claims["exp"] = time.Now().Add(time.Hour * 24).Unix()
-	tokenString, err := token.SignedString([]byte(os.Getenv("SECRET_KEY")))
+	tokenString, err := DispatchToken(user.PassWord, user.UserName, os.Getenv("SECRET_KEY"), time.Now())
 	if err != nil {
 		w.Write([]byte("err"))
 	}
