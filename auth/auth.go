@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"encoding/json"
 	"net/http"
 	"os"
 	"time"
@@ -8,6 +9,10 @@ import (
 	jwtmiddleware "github.com/auth0/go-jwt-middleware"
 	jwt "github.com/dgrijalva/jwt-go"
 )
+
+type tokenRes struct {
+	Token string `json:"token"`
+}
 
 // GetTokenHandker get token
 var GetTokenHandker = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -22,7 +27,7 @@ var GetTokenHandker = http.HandlerFunc(func(w http.ResponseWriter, r *http.Reque
 	if err != nil {
 		w.Write([]byte("err"))
 	}
-	w.Write([]byte(tokenString))
+	json.NewEncoder(w).Encode(&tokenRes{Token: tokenString})
 })
 
 // JwtMiddleware check token
