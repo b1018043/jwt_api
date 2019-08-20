@@ -10,6 +10,8 @@ import (
 	jwt "github.com/dgrijalva/jwt-go"
 )
 
+const during = 24
+
 type tokenRes struct {
 	Token string `json:"token"`
 }
@@ -27,7 +29,7 @@ func DispatchToken(sub, name, secret string, t time.Time) (string, error) {
 	claims["sub"] = sub
 	claims["name"] = name
 	claims["iat"] = t
-	claims["exp"] = t.Add(time.Hour * 24).Unix()
+	claims["exp"] = t.Add(time.Hour * during).Unix()
 	tokenString, err := token.SignedString([]byte(secret))
 	return tokenString, err
 }
