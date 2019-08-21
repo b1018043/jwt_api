@@ -6,10 +6,10 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/dgrijalva/jwt-go"
-
 	"github.com/b1018043/jwt_api/auth"
 
+	"github.com/dgrijalva/jwt-go"
+	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 	"github.com/jinzhu/gorm"
 	"github.com/joho/godotenv"
@@ -32,6 +32,7 @@ type Todo struct {
 	Todo    string `json:"todo"`
 	Process string `json:"process"`
 	User    string `json:"user"`
+	TodoID  string `json:"todo-id"`
 }
 
 func envLoad() {
@@ -99,7 +100,12 @@ var usertodos = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusNonAuthoritativeInfo)
 			return
 		}
-		db.Create(&Todo{User: userid, Todo: posttodo.Todo, Process: "plan"})
+		u, err := uuid.NewRandom()
+		if err != nil {
+			w.WriteHeader(http.StatusExpectationFailed)
+			return
+		}
+		db.Create(&Todo{User: userid, Todo: posttodo.Todo, Process: "plan", TodoID: u.String()})
 	case http.MethodPut:
 	case http.MethodDelete:
 	}
