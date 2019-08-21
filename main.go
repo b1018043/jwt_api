@@ -18,6 +18,12 @@ type postTodo struct {
 	Todo string `json:"todo"`
 }
 
+// ResponseJSON is struct
+type ResponseJSON struct {
+	Todos  []Todo `json:"todos"`
+	Length int    `json:"length"`
+}
+
 // Todo is todo
 type Todo struct {
 	gorm.Model
@@ -73,7 +79,7 @@ var usertodos = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 	case http.MethodGet:
 		var todos []Todo
 		db.Find(&todos)
-		json.NewEncoder(w).Encode(&todos)
+		json.NewEncoder(w).Encode(&ResponseJSON{Todos: todos, Length: len(todos)})
 	case http.MethodPost:
 		if r.Header.Get("Content-Type") != "application/json" {
 			w.WriteHeader(http.StatusBadRequest)
