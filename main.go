@@ -6,6 +6,8 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/dgrijalva/jwt-go"
+
 	"github.com/b1018043/jwt_api/auth"
 
 	"github.com/gorilla/mux"
@@ -91,7 +93,13 @@ var usertodos = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
-		db.Create(&Todo{User: "hoge", Todo: posttodo.Todo, Process: "plan"})
+		claims := r.Context().Value("user").(*jwt.Token).Claims.(jwt.MapClaims)
+		userid, ok := claims["sub"].(string)
+		if !ok {
+			w.WriteHeader(http.StatusNonAuthoritativeInfo)
+			return
+		}
+		db.Create(&Todo{User: userid, Todo: posttodo.Todo, Process: "plan"})
 	case http.MethodPut:
 	case http.MethodDelete:
 	}
