@@ -50,9 +50,14 @@ func main() {
 var usertodos = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
-		// TODO : tokenからUserIDを読み込んでIDが一致するものだけを返却するようにする
+		claims := r.Context().Value("user").(*jwt.Token).Claims.(jwt.MapClaims)
+		userid, ok := claims["sub"].(string)
+		if !ok {
+			w.WriteHeader(http.StatusExpectationFailed)
+			return
+		}
 		var todos []database.Todo
-		database.GetDB().Find(&todos)
+		database.GetDB().Where("user_id=?", userid).Find(&todos)
 		json.NewEncoder(w).Encode(&ResponseJSON{Todos: todos, Length: len(todos)})
 	case http.MethodPost:
 		if r.Header.Get("Content-Type") != "application/json" {
