@@ -6,14 +6,14 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/b1018043/jwt_api/database"
+
 	"github.com/b1018043/jwt_api/auth"
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
-	"github.com/jinzhu/gorm"
 	"github.com/joho/godotenv"
-	_ "github.com/mattn/go-sqlite3"
 )
 
 type postTodo struct {
@@ -22,26 +22,8 @@ type postTodo struct {
 
 // ResponseJSON is struct
 type ResponseJSON struct {
-	Todos  []Todo `json:"todos"`
-	Length int    `json:"length"`
-}
-
-// Todo is struct about todo information
-type Todo struct {
-	gorm.Model
-	Todo    string `json:"todo"`
-	Process string `json:"process"`
-	UserID  string `json:"userid"`
-	TodoID  string `json:"todoid"`
-}
-
-// User is user information
-type User struct {
-	gorm.Model
-	UserName string `json:"username"`
-	UserID   string `json:"userid"`
-	Password string `json:"password"`
-	Email    string `json:"Email"`
+	Todos  []database.Todo `json:"todos"`
+	Length int             `json:"length"`
 }
 
 func envLoad() {
@@ -51,20 +33,8 @@ func envLoad() {
 	}
 }
 
-var db *gorm.DB
-var er error
-
-func init() {
-	db, er = gorm.Open("sqlite3", "./data.db")
-	if er != nil {
-		return
-	}
-	db.AutoMigrate(&Todo{})
-}
-
 func main() {
 	envLoad()
-	defer db.Close()
 	var addr = flag.String("addr", ":8080", "address")
 	flag.Parse()
 	r := mux.NewRouter()
@@ -79,8 +49,8 @@ func main() {
 var usertodos = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
-		var todos []Todo
-		db.Find(&todos)
+		var todos []database.Todo
+		database.GetDB().Find(&todos)
 		json.NewEncoder(w).Encode(&ResponseJSON{Todos: todos, Length: len(todos)})
 	case http.MethodPost:
 		if r.Header.Get("Content-Type") != "application/json" {
@@ -104,7 +74,7 @@ var usertodos = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusExpectationFailed)
 			return
 		}
-		db.Create(&Todo{UserID: userid, Todo: posttodo.Todo, Process: "plan", TodoID: u.String()})
+		database.GetDB().Create(&database.Todo{UserID: userid, Todo: posttodo.Todo, Process: "plan", TodoID: u.String()})
 	case http.MethodPut:
 	case http.MethodDelete:
 	}
