@@ -26,13 +26,22 @@ type ResponseJSON struct {
 	Length int    `json:"length"`
 }
 
-// Todo is todo
+// Todo is struct about todo information
 type Todo struct {
 	gorm.Model
 	Todo    string `json:"todo"`
 	Process string `json:"process"`
-	User    string `json:"user"`
-	TodoID  string `json:"todo-id"`
+	UserID  string `json:"userid"`
+	TodoID  string `json:"todoid"`
+}
+
+// User is user information
+type User struct {
+	gorm.Model
+	UserName string `json:"username"`
+	UserID   string `json:"userid"`
+	Password string `json:"password"`
+	Email    string `json:"Email"`
 }
 
 func envLoad() {
@@ -59,7 +68,6 @@ func main() {
 	var addr = flag.String("addr", ":8080", "address")
 	flag.Parse()
 	r := mux.NewRouter()
-	r.Handle("/todo", todos)
 	r.Handle("/private", auth.JwtMiddleware.Handler(usertodos))
 	r.Handle("/auth", auth.GetTokenHandker)
 	log.Println("port :", *addr)
@@ -67,15 +75,6 @@ func main() {
 		log.Fatal("ListenAndServe:", err)
 	}
 }
-
-var todos = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-	todo := &Todo{
-		Todo:    "ねる",
-		Process: "plan",
-		User:    "hoge",
-	}
-	json.NewEncoder(w).Encode(todo)
-})
 
 var usertodos = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
@@ -105,7 +104,7 @@ var usertodos = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusExpectationFailed)
 			return
 		}
-		db.Create(&Todo{User: userid, Todo: posttodo.Todo, Process: "plan", TodoID: u.String()})
+		db.Create(&Todo{UserID: userid, Todo: posttodo.Todo, Process: "plan", TodoID: u.String()})
 	case http.MethodPut:
 	case http.MethodDelete:
 	}
