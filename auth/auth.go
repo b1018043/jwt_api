@@ -50,37 +50,6 @@ func DispatchToken(sub, name, secret string, t time.Time) (string, error) {
 	return tokenString, err
 }
 
-// GetTokenHandker get token
-var GetTokenHandker = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-	if r.Method == http.MethodGet {
-		tokenString, err := DispatchToken("123456789", "fuga", os.Getenv("SECRET_KEY"), time.Now())
-		if err != nil {
-			w.Write([]byte("err"))
-		}
-		json.NewEncoder(w).Encode(&tokenRes{Token: tokenString})
-		return
-	}
-	if r.Method != http.MethodPost {
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
-	if r.Header.Get("Content-Type") != "application/json" {
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
-	var user tokenRequest
-	defer r.Body.Close()
-	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
-	tokenString, err := DispatchToken(user.PassWord, user.UserName, os.Getenv("SECRET_KEY"), time.Now())
-	if err != nil {
-		w.Write([]byte("err"))
-	}
-	json.NewEncoder(w).Encode(&tokenRes{Token: tokenString})
-})
-
 // JwtMiddleware check token
 var JwtMiddleware = jwtmiddleware.New(jwtmiddleware.Options{
 	ValidationKeyGetter: func(token *jwt.Token) (interface{}, error) {

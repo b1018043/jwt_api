@@ -39,10 +39,9 @@ func main() {
 	flag.Parse()
 	r := mux.NewRouter()
 	r.Handle("/private", auth.JwtMiddleware.Handler(usertodos))
-	r.Handle("/auth", auth.GetTokenHandker)
 	r.Handle("/login", auth.LoginHandler)
 	r.Handle("/signup", auth.SignUpHandler)
-	log.Println("port :", *addr)
+	log.Println("port ", *addr)
 	if err := http.ListenAndServe(*addr, r); err != nil {
 		log.Fatal("ListenAndServe:", err)
 	}
