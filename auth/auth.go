@@ -28,7 +28,7 @@ type tokenRequest struct {
 
 type loginRequest struct {
 	Email string `json:"email"`
-	Pass  string `json:"pass"`
+	Pass  string `json:"password"`
 }
 
 type signUpRequest struct {
@@ -144,7 +144,7 @@ var SignUpHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request
 		return
 	}
 	var setuser = database.User{UserID: u.String(), UserName: tmp.UserName, Password: tmp.PassWord, Email: tmp.Email}
-	if err := database.GetDB().Create(&setuser); err != nil {
+	if err := database.GetDB().Create(&setuser).Error; err != nil {
 		w.WriteHeader(http.StatusExpectationFailed)
 		return
 	}
