@@ -83,5 +83,3 @@ var usertodos = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// TODO : TodoIDの一致するtodoを探して削除できるようにする
 	}
 })
-
-//TODO : ログインとサインアップの実装
