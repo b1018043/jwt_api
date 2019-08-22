@@ -49,6 +49,7 @@ func main() {
 var usertodos = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
+		// TODO : tokenからUserIDを読み込んでIDが一致するものだけを返却するようにする
 		var todos []database.Todo
 		database.GetDB().Find(&todos)
 		json.NewEncoder(w).Encode(&ResponseJSON{Todos: todos, Length: len(todos)})
@@ -75,7 +76,11 @@ var usertodos = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		database.GetDB().Create(&database.Todo{UserID: userid, Todo: posttodo.Todo, Process: "plan", TodoID: u.String()})
-	case http.MethodPut:
+	case http.MethodPatch:
+		// TODO : TodoIDの一致するtodoを探して部分更新をできるようにする
 	case http.MethodDelete:
+		// TODO : TodoIDの一致するtodoを探して削除できるようにする
 	}
 })
+
+//TODO : ログインとサインアップの実装
