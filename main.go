@@ -26,6 +26,11 @@ type ResponseJSON struct {
 	Length int             `json:"length"`
 }
 
+type updateTodo struct {
+	TodoID  string `json:"todoid"`
+	Process string `json:"process"`
+}
+
 func envLoad() {
 	err := godotenv.Load()
 	if err != nil {
@@ -84,6 +89,37 @@ var usertodos = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		database.GetDB().Create(&database.Todo{UserID: userid, Todo: posttodo.Todo, Process: "plan", TodoID: u.String()})
 	case http.MethodPatch:
 		// TODO : TodoIDの一致するtodoを探して部分更新をできるようにする
+		if r.Header.Get("Content-Type") != "application/json" {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+		claims := r.Context().Value("user").(*jwt.Token).Claims.(jwt.MapClaims)
+		userid, ok := claims["sub"].(string)
+		if !ok {
+			w.WriteHeader(http.StatusExpectationFailed)
+			return
+		}
+		var info updateTodo
+		if err := json.NewDecoder(r.Body).Decode(&info); err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+		var proc string
+		switch info.Process {
+		case "plan":
+			proc = "doing"
+		case "doing":
+			proc = "done"
+		case "done":
+			//TODO: add delete
+			return
+		default:
+			proc = "plan"
+		}
+		if err := database.GetDB().Model(&database.Todo{}).Where("user_id=? AND todo_id=?", userid, info.TodoID).Update("process", proc).Error; err != nil {
+			w.WriteHeader(http.StatusExpectationFailed)
+			return
+		}
 	case http.MethodDelete:
 		// TODO : TodoIDの一致するtodoを探して削除できるようにする
 	}
