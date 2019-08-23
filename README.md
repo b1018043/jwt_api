@@ -3,9 +3,26 @@
 1. jwtを使った認証付きのapi
 2. todoを記録したりしている
 ## 使い方
-```go build``` <br>
-```./jwt_api.exe```<br>
-path = /login method = post<br>
-```{"email":"email","password":"password"}```<br>
-path = /signup method = post<br>
-```{"username":"username","email":"email","password":"password"}```<br>
+```
+go build
+./jwt_api.exe
+```
+入力値
+```
+// path="/login", method="post"
+{
+    "email":"email",
+    "password":"password"
+}
+```
+```
+// path="/signup", method="post"
+{
+    "username":"username",
+    "email":"email",
+    "password":"password"
+}
+```
+```
+// path="/private", method="get"
+```
