@@ -52,18 +52,22 @@ func main() {
 	}
 }
 
+func getTodo(w http.ResponseWriter, r *http.Request) {
+	claims := r.Context().Value("user").(*jwt.Token).Claims.(jwt.MapClaims)
+	userid, ok := claims["sub"].(string)
+	if !ok {
+		w.WriteHeader(http.StatusExpectationFailed)
+		return
+	}
+	var todos []database.Todo
+	database.GetDB().Where("user_id=?", userid).Find(&todos)
+	json.NewEncoder(w).Encode(&ResponseJSON{Todos: todos, Length: len(todos)})
+}
+
 var usertodos = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
-		claims := r.Context().Value("user").(*jwt.Token).Claims.(jwt.MapClaims)
-		userid, ok := claims["sub"].(string)
-		if !ok {
-			w.WriteHeader(http.StatusExpectationFailed)
-			return
-		}
-		var todos []database.Todo
-		database.GetDB().Where("user_id=?", userid).Find(&todos)
-		json.NewEncoder(w).Encode(&ResponseJSON{Todos: todos, Length: len(todos)})
+		getTodo(w, r)
 	case http.MethodPost:
 		if r.Header.Get("Content-Type") != "application/json" {
 			w.WriteHeader(http.StatusBadRequest)
@@ -87,6 +91,7 @@ var usertodos = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		database.GetDB().Create(&database.Todo{UserID: userid, Todo: posttodo.Todo, Process: "plan", TodoID: u.String()})
+		getTodo(w, r)
 	case http.MethodPatch:
 		// TODO : TodoIDの一致するtodoを探して部分更新をできるようにする
 		if r.Header.Get("Content-Type") != "application/json" {
@@ -120,6 +125,7 @@ var usertodos = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusExpectationFailed)
 			return
 		}
+		getTodo(w, r)
 	case http.MethodDelete:
 		// TODO : TodoIDの一致するtodoを探して削除できるようにする
 	}
