@@ -31,6 +31,10 @@ type updateTodo struct {
 	Process string `json:"process"`
 }
 
+type deleteTodo struct {
+	TodoID string `json:"todoid"`
+}
+
 func envLoad() {
 	err := godotenv.Load()
 	if err != nil {
@@ -93,7 +97,6 @@ var usertodos = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		database.GetDB().Create(&database.Todo{UserID: userid, Todo: posttodo.Todo, Process: "plan", TodoID: u.String()})
 		getTodo(w, r)
 	case http.MethodPatch:
-		// TODO : TodoIDの一致するtodoを探して部分更新をできるようにする
 		if r.Header.Get("Content-Type") != "application/json" {
 			w.WriteHeader(http.StatusBadRequest)
 			return
@@ -109,6 +112,7 @@ var usertodos = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
+		defer r.Body.Close()
 		var proc string
 		switch info.Process {
 		case "plan":
@@ -116,7 +120,7 @@ var usertodos = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		case "doing":
 			proc = "done"
 		case "done":
-			//TODO: add delete
+			database.GetDB().Delete(&database.Todo{}, "user_id=? AND todo_id=?", userid, info.TodoID)
 			return
 		default:
 			proc = "plan"
@@ -127,6 +131,21 @@ var usertodos = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		}
 		getTodo(w, r)
 	case http.MethodDelete:
-		// TODO : TodoIDの一致するtodoを探して削除できるようにする
+		claims := r.Context().Value("user").(*jwt.Token).Claims.(jwt.MapClaims)
+		userid, ok := claims["sub"].(string)
+		if !ok {
+			w.WriteHeader(http.StatusExpectationFailed)
+			return
+		}
+		var info deleteTodo
+		if err := json.NewDecoder(r.Body).Decode(&info); err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+		if err := database.GetDB().Delete(&database.Todo{}, "user_id=? AND todo_id=?", userid, info.TodoID).Error; err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+		getTodo(w, r)
 	}
 })
