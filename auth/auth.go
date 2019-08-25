@@ -76,7 +76,7 @@ var LoginHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request)
 	defer r.Body.Close()
 	var user database.User
 	if err := database.GetDB().Where("email=? AND password=?", tmp.Email, tmp.Pass).First(&user).Error; err != nil {
-		w.WriteHeader(http.StatusExpectationFailed)
+		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
 	tokenString, err := DispatchToken(user.UserID, user.UserName, os.Getenv("SECRET_KEY"), time.Now())
@@ -104,7 +104,7 @@ var SignUpHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request
 	}
 	var user database.User
 	if err := database.GetDB().Where("email=?", tmp.Email).First(&user).Error; !gorm.IsRecordNotFoundError(err) {
-		w.WriteHeader(http.StatusBadRequest)
+		w.WriteHeader(http.StatusConflict)
 		return
 	}
 	u, err := uuid.NewRandom()

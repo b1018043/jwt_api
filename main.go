@@ -60,7 +60,7 @@ func getTodo(w http.ResponseWriter, r *http.Request) {
 	claims := r.Context().Value("user").(*jwt.Token).Claims.(jwt.MapClaims)
 	userid, ok := claims["sub"].(string)
 	if !ok {
-		w.WriteHeader(http.StatusExpectationFailed)
+		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 	var todos []database.Todo
@@ -86,12 +86,12 @@ var usertodos = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		claims := r.Context().Value("user").(*jwt.Token).Claims.(jwt.MapClaims)
 		userid, ok := claims["sub"].(string)
 		if !ok {
-			w.WriteHeader(http.StatusNonAuthoritativeInfo)
+			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
 		u, err := uuid.NewRandom()
 		if err != nil {
-			w.WriteHeader(http.StatusExpectationFailed)
+			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
 		database.GetDB().Create(&database.Todo{UserID: userid, Todo: posttodo.Todo, Process: "plan", TodoID: u.String()})
@@ -104,7 +104,7 @@ var usertodos = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		claims := r.Context().Value("user").(*jwt.Token).Claims.(jwt.MapClaims)
 		userid, ok := claims["sub"].(string)
 		if !ok {
-			w.WriteHeader(http.StatusExpectationFailed)
+			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
 		var info updateTodo
@@ -126,7 +126,7 @@ var usertodos = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			proc = "plan"
 		}
 		if err := database.GetDB().Model(&database.Todo{}).Where("user_id=? AND todo_id=?", userid, info.TodoID).Update("process", proc).Error; err != nil {
-			w.WriteHeader(http.StatusExpectationFailed)
+			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
 		getTodo(w, r)
@@ -134,7 +134,7 @@ var usertodos = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		claims := r.Context().Value("user").(*jwt.Token).Claims.(jwt.MapClaims)
 		userid, ok := claims["sub"].(string)
 		if !ok {
-			w.WriteHeader(http.StatusExpectationFailed)
+			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
 		var info deleteTodo
@@ -143,7 +143,7 @@ var usertodos = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		if err := database.GetDB().Delete(&database.Todo{}, "user_id=? AND todo_id=?", userid, info.TodoID).Error; err != nil {
-			w.WriteHeader(http.StatusBadRequest)
+			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
 		getTodo(w, r)
