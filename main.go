@@ -122,6 +122,7 @@ var usertodos = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			proc = "done"
 		case "done":
 			database.GetDB().Delete(&database.Todo{}, "user_id=? AND todo_id=?", userid, info.TodoID)
+			getTodo(w, r)
 			return
 		default:
 			proc = "plan"
