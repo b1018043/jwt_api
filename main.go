@@ -69,6 +69,7 @@ func getTodo(w http.ResponseWriter, r *http.Request) {
 }
 
 var usertodos = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
 	switch r.Method {
 	case http.MethodGet:
 		getTodo(w, r)
@@ -147,5 +148,10 @@ var usertodos = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		getTodo(w, r)
+	case http.MethodOptions:
+		w.Header().Set("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization, authorization")
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PATCH, DELETE")
+		w.WriteHeader(http.StatusOK)
+		return
 	}
 })
